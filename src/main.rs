@@ -53,7 +53,7 @@ fn crate_mover_9001(num    : usize,
 
 /// Takes the crate moves plan and executes it using the given crate mover.
 /// 
-fn execute_crate_plan<F>(mover: F) -> Result<String, Box<dyn Error>> 
+fn execute_crate_plan<F>(crate_mover_900x: F) -> Result<String, Box<dyn Error>> 
 where
     F: Fn(usize, usize, usize, &mut Vec<Vec<String>>),
 {
@@ -66,22 +66,22 @@ where
     let mut crate_map = HashMap::new();
     let mut crate_vec = vec![vec![]];
 
-    // Create the initial stacks of crates.
+    // Read top lines of file and create the initial stacks of crates.
     for line in &mut lines {
         let line = line?;
 
         if re_crate.is_match(&line) {
-
             for cr in re_crate.find_iter(&line) {
+                // Use the match offset as the stack number.
                 let num  = cr.start();
                 let name = line.get(cr.start() + 1..cr.end() - 1)
                                .unwrap()
                                .to_string();
-
                 crate_map.entry(num).or_insert(vec![]).push(name);
             }
         } else { break; }
     }
+    // Get the map's stack keys and put them in order.
     let mut stack_nums = crate_map.keys().copied().collect::<Vec<_>>();
     stack_nums.sort();
 
@@ -92,7 +92,7 @@ where
         crate_vec.push(stack);
     }
 
-    // Move the crates per the instructions.
+    // Read remaining lines of file and move the crates per the instructions.
     for line in &mut lines {
         let line = line?;
 
@@ -101,20 +101,13 @@ where
                              .collect::<Result<Vec<_>,_>>()?;
 
             let (num, from, to) = (mov[0], mov[1], mov[2]);
-
-            mover(num, from, to, &mut crate_vec);
+            crate_mover_900x(num, from, to, &mut crate_vec);
         }
     }
 
     // Get the crate name at the top of each stack.
-    let mut top_crates = String::new();
-
-    for stack in crate_vec {
-        if let Some(name) = stack.last() {
-            top_crates.push_str(name);
-        }
-    }
-
-    Ok(top_crates)
+    Ok(crate_vec.into_iter()
+                .map(|mut v| v.pop().unwrap_or_else(|| "".to_string()))
+                .collect())
 }
 
