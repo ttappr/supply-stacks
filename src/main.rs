@@ -64,7 +64,7 @@ where
 
     let mut lines     = reader.lines();
     let mut crate_map = HashMap::new();
-    let mut crate_vec;
+    let mut crate_vec = vec![vec![]];
 
     // Create the initial stacks of crates.
     for line in &mut lines {
@@ -78,23 +78,21 @@ where
                                .unwrap()
                                .to_string();
 
-                crate_map.entry(num).or_insert(Vec::new()).push(name);
+                crate_map.entry(num).or_insert(vec![]).push(name);
             }
         } else { break; }
     }
     let mut stack_nums = crate_map.keys().copied().collect::<Vec<_>>();
     stack_nums.sort();
 
-    crate_vec = vec![vec![]; stack_nums.len() + 1];
-
-    // Put the crate stacks in the correct order in a vector.
-    for (i, k) in (1..).zip(stack_nums) {
+    // Put the crate stacks in the correct order in the stack vector.
+    for k in stack_nums {
         let mut stack = crate_map.remove(&k).unwrap();
         stack.reverse();
-        crate_vec[i] = stack;
+        crate_vec.push(stack);
     }
 
-    // Move the crates.
+    // Move the crates per the instructions.
     for line in &mut lines {
         let line = line?;
 
