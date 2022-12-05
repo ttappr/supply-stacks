@@ -6,12 +6,15 @@ use regex::Regex;
 
 
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("part_1: {:?}", part_1()?);
+    println!("part_1: {}", part_1()?);
     println!("part_2: {}", part_2()?);
     Ok(())
 }
 
-fn move_crates_9000(num    : usize, 
+/// Moves the crates according to the instructions in the file using the
+/// CrateMover 9000.
+/// 
+fn crate_mover_9000(num    : usize, 
                     from   : usize, 
                     to     : usize, 
                     crates : &mut Vec<Vec<String>>) 
@@ -22,7 +25,10 @@ fn move_crates_9000(num    : usize,
     crates[to].append(&mut temp);
 }
 
-fn move_crates_9001(num    : usize, 
+/// Moves the crates according to the instructions in the file using the
+/// CrateMover 9001.
+/// 
+fn crate_mover_9001(num    : usize, 
                     from   : usize, 
                     to     : usize, 
                     crates : &mut Vec<Vec<String>>) 
@@ -32,6 +38,8 @@ fn move_crates_9001(num    : usize,
     crates[to].append(&mut temp);
 }
 
+/// Takes the crate moves plan and executes it using the given crate mover.
+/// 
 fn execute_crate_plan<F>(mover: F) -> Result<String, Box<dyn Error>> 
 where
     F: Fn(usize, usize, usize, &mut Vec<Vec<String>>),
@@ -78,21 +86,17 @@ where
         let line = line?;
 
         if let Some(caps) = re_moves.captures(&line) {            
-            let p = (1..=3).map(|i| caps[i].parse::<usize>())
-                           .collect::<Result<Vec<_>,_>>()?;
+            let mov = (1..=3).map(|i| caps[i].parse::<usize>())
+                             .collect::<Result<Vec<_>,_>>()?;
 
-            let (num, from, to) = (p[0], p[1], p[2]);
-            let     pos  = crate_vec[from].len() - num;
-            let mut temp = crate_vec[from].split_off(pos);
-
-            temp.reverse();
-
-            crate_vec[to].append(&mut temp);
+            let (num, from, to) = (mov[0], mov[1], mov[2]);
+            mover(num, from, to, &mut crate_vec);
         }
     }
 
     // Get the crate name at the top of each stack.
     let mut top_crates = String::new();
+
     for stack in crate_vec {
         if let Some(name) = stack.last() {
             top_crates.push_str(name);
@@ -102,10 +106,14 @@ where
     Ok(top_crates)
 }
 
+/// Executes the crate moves plan using the CrateMover 9000.
+/// 
 fn part_1() -> Result<String, Box<dyn Error>> {
-    execute_crate_plan(move_crates_9000)
+    execute_crate_plan(crate_mover_9000)
 }
 
-fn part_2() -> Result<u64, Box<dyn Error>> {
-    execute_crate_plan(move_crates_9001)
+/// Executes the crate moves plan using the CrateMover 9001.
+/// 
+fn part_2() -> Result<String, Box<dyn Error>> {
+    execute_crate_plan(crate_mover_9001)
 }
