@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::{error::Error, fs::File, io::{BufReader, BufRead}};
 use std::collections::HashMap;
 use regex::Regex;
@@ -11,26 +9,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Executes the crate moves plan using the CrateMover 9000.
+/// Executes the crate moving plan using the CrateMover 9000.
 /// 
 fn part_1() -> Result<String, Box<dyn Error>> {
     execute_crate_plan(crate_mover_9000)
 }
 
-/// Executes the crate moves plan using the CrateMover 9001.
+/// Executes the crate moving plan using the CrateMover 9001.
 /// 
 fn part_2() -> Result<String, Box<dyn Error>> {
     execute_crate_plan(crate_mover_9001)
 }
 
 
-/// Moves the crates according to the instructions in the file using the
+/// Moves the specified crates as if they were moved one at a time with the 
 /// CrateMover 9000.
 /// 
 fn crate_mover_9000(num    : usize, 
                     from   : usize, 
                     to     : usize, 
-                    crates : &mut Vec<Vec<String>>) 
+                    crates : &mut [Vec<String>]) 
 {
     let     pos  = crates[from].len() - num;
     let mut temp = crates[from].split_off(pos);
@@ -38,24 +36,25 @@ fn crate_mover_9000(num    : usize,
     crates[to].append(&mut temp);
 }
 
-/// Moves the crates according to the instructions in the file using the
-/// CrateMover 9001.
+/// Moves the the specified crates all at once with the CrateMover 9001.
 /// 
 fn crate_mover_9001(num    : usize, 
                     from   : usize, 
                     to     : usize, 
-                    crates : &mut Vec<Vec<String>>) 
+                    crates : &mut [Vec<String>]) 
 {
     let     pos  = crates[from].len() - num;
     let mut temp = crates[from].split_off(pos);
     crates[to].append(&mut temp);
 }
 
-/// Takes the crate moves plan and executes it using the given crate mover.
+/// Takes the crate moving plan and executes it using the given crate mover.
+/// Processes the file line by line rather than reading it in all at once as
+/// one big string, this approach is more memory efficient.
 /// 
 fn execute_crate_plan<F>(crate_mover_900x: F) -> Result<String, Box<dyn Error>> 
 where
-    F: Fn(usize, usize, usize, &mut Vec<Vec<String>>),
+    F: Fn(usize, usize, usize, &mut [Vec<String>]),
 {
     let file     = File::open("data/data.txt")?;
     let reader   = BufReader::new(file);
@@ -77,7 +76,7 @@ where
                 let name = line.get(cr.start() + 1..cr.end() - 1)
                                .unwrap()
                                .to_string();
-                crate_map.entry(num).or_insert(vec![]).push(name);
+                crate_map.entry(num).or_insert_with(|| vec![]).push(name);
             }
         } else { break; }
     }
@@ -105,9 +104,7 @@ where
         }
     }
 
-    // Get the crate name at the top of each stack.
-    Ok(crate_vec.into_iter()
-                .map(|mut v| v.pop().unwrap_or_else(|| "".to_string()))
-                .collect())
+    // Return a string with the crate name at the top of each stack.
+    Ok(crate_vec.into_iter().map(|mut v| v.pop().unwrap_or_default()).collect())
 }
 
