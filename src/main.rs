@@ -11,6 +11,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/// Executes the crate moves plan using the CrateMover 9000.
+/// 
+fn part_1() -> Result<String, Box<dyn Error>> {
+    execute_crate_plan(crate_mover_9000)
+}
+
+/// Executes the crate moves plan using the CrateMover 9001.
+/// 
+fn part_2() -> Result<String, Box<dyn Error>> {
+    execute_crate_plan(crate_mover_9001)
+}
+
+
 /// Moves the crates according to the instructions in the file using the
 /// CrateMover 9000.
 /// 
@@ -90,6 +103,7 @@ where
                              .collect::<Result<Vec<_>,_>>()?;
 
             let (num, from, to) = (mov[0], mov[1], mov[2]);
+
             mover(num, from, to, &mut crate_vec);
         }
     }
@@ -106,14 +120,3 @@ where
     Ok(top_crates)
 }
 
-/// Executes the crate moves plan using the CrateMover 9000.
-/// 
-fn part_1() -> Result<String, Box<dyn Error>> {
-    execute_crate_plan(crate_mover_9000)
-}
-
-/// Executes the crate moves plan using the CrateMover 9001.
-/// 
-fn part_2() -> Result<String, Box<dyn Error>> {
-    execute_crate_plan(crate_mover_9001)
-}
