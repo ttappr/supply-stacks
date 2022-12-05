@@ -68,14 +68,12 @@ where
     // Read top lines of file and create the initial stacks of crates.
     for line in &mut lines {
         let line = line?;
-
         if re_crate.is_match(&line) {
             for cr in re_crate.find_iter(&line) {
-                // Use the match offset as the stack number.
+                // Use the match offset as the initial stack number.
                 let num  = cr.start();
                 let name = line.get(cr.start() + 1..cr.end() - 1)
-                               .unwrap()
-                               .to_string();
+                               .unwrap().to_string();
                 crate_map.entry(num).or_insert_with(|| vec![]).push(name);
             }
         } else { break; }
@@ -90,21 +88,19 @@ where
         stack.reverse();
         crate_vec.push(stack);
     }
-
     // Read remaining lines of file and move the crates per the instructions.
     for line in &mut lines {
         let line = line?;
-
         if let Some(caps) = re_moves.captures(&line) {            
             let mov = (1..=3).map(|i| caps[i].parse::<usize>())
                              .collect::<Result<Vec<_>,_>>()?;
-
             let (num, from, to) = (mov[0], mov[1], mov[2]);
             crate_mover_900x(num, from, to, &mut crate_vec);
         }
     }
-
     // Return a string with the crate name at the top of each stack.
-    Ok(crate_vec.into_iter().map(|mut v| v.pop().unwrap_or_default()).collect())
+    Ok(crate_vec.into_iter()
+                .map(|mut v| v.pop().unwrap_or_default())
+                .collect())
 }
 
