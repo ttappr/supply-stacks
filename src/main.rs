@@ -1,5 +1,5 @@
 use std::{error::Error, fs::File, io::{BufReader, BufRead}};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use regex::Regex;
 
 
@@ -30,10 +30,10 @@ fn crate_mover_9000(num    : usize,
                     to     : usize, 
                     crates : &mut [Vec<String>]) 
 {
-    let     pos  = crates[from].len() - num;
-    let mut temp = crates[from].split_off(pos);
-    temp.reverse();
-    crates[to].append(&mut temp);
+    let     idx = crates[from].len() - num;
+    let mut crs = crates[from].split_off(idx);
+    crs.reverse();
+    crates[to].append(&mut crs);
 }
 
 /// Moves the the specified crates all at once with the CrateMover 9001.
@@ -43,16 +43,16 @@ fn crate_mover_9001(num    : usize,
                     to     : usize, 
                     crates : &mut [Vec<String>]) 
 {
-    let     pos  = crates[from].len() - num;
-    let mut temp = crates[from].split_off(pos);
-    crates[to].append(&mut temp);
+    let     idx = crates[from].len() - num;
+    let mut crs = crates[from].split_off(idx);
+    crates[to].append(&mut crs);
 }
 
 /// Takes the crate moving plan and executes it using the given crate mover.
 /// Processes the file line by line rather than reading it in all at once as
 /// one big string, this approach is more memory efficient.
 /// 
-fn execute_crate_plan<F>(crate_mover_900x: F) -> Result<String, Box<dyn Error>> 
+fn execute_crate_plan<F>(crate_mover_900n: F) -> Result<String, Box<dyn Error>> 
 where
     F: Fn(usize, usize, usize, &mut [Vec<String>]),
 {
@@ -62,7 +62,7 @@ where
     let re_moves = Regex::new(r"move (\d+) from (\d+) to (\d+)")?;
 
     let mut lines     = reader.lines();
-    let mut crate_map = HashMap::new();
+    let mut crate_map = BTreeMap::new();
     let mut crate_vec = vec![vec![]];
 
     // Read top lines of file and create the initial stacks of crates.
@@ -72,19 +72,13 @@ where
             for cr in re_crate.find_iter(&line) {
                 // Use the match offset as the initial stack number.
                 let num  = cr.start();
-                let name = line.get(cr.start() + 1..cr.end() - 1)
-                               .unwrap().to_string();
+                let name = cr.as_str()[1..2].to_string();
                 crate_map.entry(num).or_insert_with(|| vec![]).push(name);
             }
         } else { break; }
     }
-    // Get the map's stack keys and put them in order.
-    let mut stack_nums = crate_map.keys().copied().collect::<Vec<_>>();
-    stack_nums.sort();
-
     // Put the crate stacks in the correct order in the stack vector.
-    for k in stack_nums {
-        let mut stack = crate_map.remove(&k).unwrap();
+    for mut stack in crate_map.into_values() {
         stack.reverse();
         crate_vec.push(stack);
     }
@@ -94,8 +88,8 @@ where
         if let Some(caps) = re_moves.captures(&line) {            
             let mov = (1..=3).map(|i| caps[i].parse::<usize>())
                              .collect::<Result<Vec<_>,_>>()?;
-            let (num, from, to) = (mov[0], mov[1], mov[2]);
-            crate_mover_900x(num, from, to, &mut crate_vec);
+                             
+            crate_mover_900n(mov[0], mov[1], mov[2], &mut crate_vec);
         }
     }
     // Return a string with the crate name at the top of each stack.
